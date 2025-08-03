@@ -1,0 +1,77 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the dataset
+df = pd.read_csv(r"C:\Users\shara\Music\DATA SET\AI usage data set.csv")
+
+
+# 1. Initial Overview
+
+print("Dataset Shape:", df.shape)
+print("\nData Types:\n", df.dtypes)
+print("\nFirst 5 Rows:\n", df.head())
+print("\nMissing Values:\n", df.isnull().sum())
+print("\nSummary Statistics:\n", df.describe())
+
+# 2. Data Cleaning
+
+df = df.drop_duplicates()
+df['Daily_Usage_Hours'] = pd.to_numeric(df['Daily_Usage_Hours'], errors='coerce')
+df = df.dropna(subset=['Daily_Usage_Hours'])
+
+# Fill missing values
+if 'Preferred_AI_Tool' in df.columns:
+    df['Preferred_AI_Tool'] = df['Preferred_AI_Tool'].fillna('Unknown')
+
+# 3. Univariate Analysis
+
+plt.figure(figsize=(6, 4))
+sns.histplot(df['Daily_Usage_Hours'], bins=10, kde=True, color='skyblue')
+plt.title("Distribution of Daily_Usage_Hours")
+plt.xlabel("Hours")
+plt.ylabel("Frequency")
+plt.show()
+
+# 4. Bivariate Analysis
+if 'Stream' in df.columns:
+    plt.figure(figsize=(10, 5))
+    sns.boxplot(x='Stream', y='Daily_Usage_Hours', data=df)
+    plt.xticks(rotation=45)
+    plt.title("Daily_Usage_Hours")
+    plt.show()
+
+if 'Year_of_Study' in df.columns:
+    usage_by_year = df.groupby('Year_of_Study')['Daily_Usage_Hours'].mean()
+    usage_by_year.plot(kind='bar', color='salmon')
+    plt.title("Average Daily Usage by Year_of_Study")
+    plt.ylabel("Hours")
+    plt.xticks(rotation=0)
+    plt.show()
+
+# 5. Multivariate Analysis
+
+if 'Stream' in df.columns and 'Year_of_Study' in df.columns:
+    pivot = df.pivot_table(values='Daily_Usage_Hours', index='Stream', columns='Year_of_Study', aggfunc='mean')
+    print("\nPivot Table - Avg Usage:\n", pivot)
+
+# Correlation
+corr = df.corr(numeric_only=True)
+plt.figure(figsize=(5, 4))
+sns.heatmap(corr, annot=True, cmap='YlGnBu', fmt=".2f")
+plt.title("Correlation Heatmap")
+plt.show()
+
+# 6. Derived Insights
+
+df['High Usage'] = df['Daily_Usage_Hours'] > 3
+print("\nHigh Usage Students (>3 hrs/day):", df['High Usage'].sum())
+
+if 'Device Used' in df.columns:
+    print("\nAverage Usage by Device:")
+    print(df.groupby('Device Used')['Daily_Usage_Hours'].mean())
+
+if 'Preferred_AI_Tool' in df.columns:
+    print("\nTop 3 AI Tools:")
+    print(df['Preferred_AI_Tool'].value_counts().head(3))
+
